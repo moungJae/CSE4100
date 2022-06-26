@@ -36,8 +36,7 @@ team_t team = {
 #define WSIZE       	4       /* Word and header/footer size (bytes) */ //line:vm:mm:beginconst
 #define DSIZE       	8       /* Doubleword size (bytes) */
 #define CHUNKSIZE  		4096  /* Extend heap by this amount (bytes) */  //line:vm:mm:endconst 
-#define INITCHUNKSIZE	128		
-#define REALLOC_BUFFER	128
+#define REALLOC_BUFFER	256
 #define TOTAL_LIST		16
 
 /* Pack a size and allocated bit into a word */
@@ -112,7 +111,7 @@ int mm_init(void)
 		*seg_lists[i] = NULL;
 	}
 
-	if (extend_heap(INITCHUNKSIZE) == NULL)
+	if (extend_heap(CHUNKSIZE) == NULL)
 		return -1; // Error
 
 	return 0; // No Error
@@ -179,9 +178,9 @@ void mm_free(void* ptr)
 	size_t size = GET_SIZE(HDRP(ptr));
 	/* $end mmfree */
 
-	REMOVE_TAG(HDRP(NEXT_BLKP(ptr)));
 	PUT_TAG(HDRP(ptr), PACK(size, 0));
 	PUT_TAG(FTRP(ptr), PACK(size, 0));
+	REMOVE_TAG(HDRP(NEXT_BLKP(ptr)));
 
 	add_seglist(ptr, size);
 	coalesce(ptr);
@@ -234,9 +233,9 @@ void* mm_realloc(void* ptr, size_t size)
 		else {
 			remainder = GET_SIZE(HDRP(ptr)) + GET_SIZE(HDRP(NEXT_BLKP(ptr))) - new_size;
 			if (remainder < 0) {
-				extend_size = MAX(CHUNKSIZE, -remainder);
+				extend_size = MAX(CHUNKSIZE, (-1) * remainder);
 				if ((extend_heap(extend_size)) == NULL)
-					return NULL;
+					return 0;
 				remainder += extend_size;
 			}
 			remove_seglist(NEXT_BLKP(ptr));
@@ -246,8 +245,9 @@ void* mm_realloc(void* ptr, size_t size)
 		block_size = GET_SIZE(HDRP(new_ptr)) - new_size;
 	}
 
-	if (block_size < 2 * REALLOC_BUFFER)
+	if (block_size < 2 * REALLOC_BUFFER) {
 		SET_TAG(HDRP(NEXT_BLKP(new_ptr)));
+	}
 
 	return new_ptr;
 }
@@ -262,6 +262,7 @@ int mm_check()
 	};
 
 	void* head;
+	int result = 1;
 
 	for (int i = 0; i < TOTAL_LIST; i++) {
 		if (*seg_lists[i] == NULL)
@@ -271,28 +272,30 @@ int mm_check()
 			if (GET_SIZE(HDRP(head)) != GET_SIZE(FTRP(head))) {
 				printf("Header's size and Footer's size are not equal.\n");
 				printf("Result(header, footer) : [%d], [%d]\n", GET_SIZE(HDRP(head)), GET_SIZE(FTRP(head)));
-				return -1;
+				result = -1;
 			}
 			else {
 				if ((i == TOTAL_LIST - 1) && (GET_SIZE(HDRP(head)) <= (1 << (i + 3)))) {
 					printf("Last seg_list case : Header's size is small.\n");
 					printf("Expected size : [%d, INF], Header's size : [%d]\n", (1 << (i + 3)), GET_SIZE(HDRP(head)));
+					result = -1;
 				}
 				else if ((i == 0) && (GET_SIZE(HDRP(head)) != 16)) {
 					printf("First seg_list case : Header's size is not 16.\n");
 					printf("Expected size : [16], Header's size : [%d]\n", GET_SIZE(HDRP(head)));
+					result = -1;
 				}
 				else if ((i != TOTAL_LIST - 1) && (GET_SIZE(HDRP(head)) <= (1 << (i + 3)) || GET_SIZE(HDRP(head)) > (1 << (i + 4)))) {
-					printf("Case except last seg_list : Header's size is small or large.\n");
+					printf("Case except of first and last seg_list : Header's size is small or large.\n");
 					printf("Expected size : [%d, %d], Header's size : [%d]\n", (1 << (i + 3)) + 1, (1 << (i + 4)), GET_SIZE(HDRP(head)));
-					return -1;
+					result = -1;
 				}
 			}
 			head = SUCC(head);
 		}
 	}
 
-	return 0;
+	return result;
 }
 
 // seg_list_1 : [2^4, 2^4]
