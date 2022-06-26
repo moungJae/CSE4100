@@ -1,6 +1,6 @@
 /*
  * mm-naive.c - The fastest, least memory-efficient malloc package.
- * 
+ *
  * In this naive approach, a block is allocated by simply incrementing
  * the brk pointer.  A block is pure payload. There are no headers or
  * footers.  Blocks are never coalesced or reused. Realloc is
@@ -18,17 +18,17 @@
 #include "mm.h"
 #include "memlib.h"
 
-/*********************************************************
- * NOTE TO STUDENTS: Before you do anything else, please
- * provide your information in the following struct.
- ********************************************************/
+ /*********************************************************
+  * NOTE TO STUDENTS: Before you do anything else, please
+  * provide your information in the following struct.
+  ********************************************************/
 team_t team = {
-    /* Your student ID */
-    "20192138",
-    /* Your full name*/
-    "Moungjae Joe",
-    /* Your email address */
-    "cmj092222@sogang.ac.kr",
+	/* Your student ID */
+	"20192138",
+	/* Your full name*/
+	"Moungjae Joe",
+	/* Your email address */
+	"cmj092222@sogang.ac.kr",
 };
 
 /* $begin mallocmacros */
@@ -74,35 +74,35 @@ team_t team = {
 #define PRED(bp)		(*(char **)(bp))
 #define SUCC(bp)		(*(char **)(bp + WSIZE))
 
-static void *seg_list_1, *seg_list_2, *seg_list_3, *seg_list_4;
-static void *seg_list_5, *seg_list_6, *seg_list_7, *seg_list_8;
-static void *seg_list_9, *seg_list_10, *seg_list_11, *seg_list_12;
-static void *seg_list_13, *seg_list_14, *seg_list_15, *seg_list_16;
+static void* seg_list_1, *seg_list_2, *seg_list_3, *seg_list_4;
+static void* seg_list_5, * seg_list_6, * seg_list_7, * seg_list_8;
+static void* seg_list_9, * seg_list_10, * seg_list_11, * seg_list_12;
+static void* seg_list_13, * seg_list_14, * seg_list_15, * seg_list_16;
 
-static void *extend_heap(size_t words);
-static void add_seglist(char *bp, size_t size);
-static void remove_seglist(char *bp);
-static void *coalesce(void *bp);
-static void *place(void *bp, size_t asize);
+static void* extend_heap(size_t words);
+static void add_seglist(char* bp, size_t size);
+static void remove_seglist(char* bp);
+static void* coalesce(void* bp);
+static void* place(void* bp, size_t asize);
 int mm_check();
 
-/* 
+/*
  * mm_init - initialize the malloc package.
  */
 int mm_init(void)
 {
-	void **seg_lists[TOTAL_LIST] = {
-        &seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
-        &seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
-        &seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
-        &seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
-    };
+	void** seg_lists[TOTAL_LIST] = {
+		&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
+		&seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
+		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
+		&seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
+	};
 
-	void *start;
+	void* start;
 
-	if ((start = mem_sbrk(4 * WSIZE)) == (void *)-1)
+	if ((start = mem_sbrk(4 * WSIZE)) == (void*)-1)
 		return -1; // Error
-	
+
 	PUT(start, 0);
 	PUT(start + WSIZE, PACK(DSIZE, 1));
 	PUT(start + (2 * WSIZE), PACK(DSIZE, 1));
@@ -118,49 +118,49 @@ int mm_init(void)
 	return 0; // No Error
 }
 
-/* 
+/*
  * mm_malloc - Allocate a block by incrementing the brk pointer.
  *     Always allocate a block whose size is a multiple of the alignment.
  */
-void *mm_malloc(size_t size)
+void* mm_malloc(size_t size)
 {
-	void **seg_lists[TOTAL_LIST] = {
-        &seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
-        &seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
-        &seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
-        &seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
-    };
+	void** seg_lists[TOTAL_LIST] = {
+		&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
+		&seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
+		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
+		&seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
+	};
 
 	size_t asize;      /* Adjusted block size */
-    size_t extendsize; /* Amount to extend heap if no fit */
-    void *bp = NULL;      
+	size_t extendsize; /* Amount to extend heap if no fit */
+	void* bp = NULL;
 	int i = 0;
 
 	/* Ignore spurious requests */
-    if (size == 0)
+	if (size == 0)
 		return NULL;
 
-    /* Adjust block size to include overhead and alignment reqs. */
-    if (size <= DSIZE)                                          //line:vm:mm:sizeadjust1
+	/* Adjust block size to include overhead and alignment reqs. */
+	if (size <= DSIZE)                                          //line:vm:mm:sizeadjust1
 		asize = 2 * DSIZE;                                        //line:vm:mm:sizeadjust2
-    else
-		asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE); //line:vm:mm:sizeadjust3
+	else
+		asize = DSIZE * ((size + (DSIZE)+(DSIZE - 1)) / DSIZE); //line:vm:mm:sizeadjust3
 
 	for (i = 0; i < TOTAL_LIST; i++) {
-        if (*seg_lists[i] != NULL && ((asize <= (1 << (i + 4))) || i == (TOTAL_LIST - 1))) {
-        	bp = *seg_lists[i];
+		if (*seg_lists[i] != NULL && ((asize <= (1 << (i + 4))) || i == (TOTAL_LIST - 1))) {
+			bp = *seg_lists[i];
 			while (bp != NULL && ((asize > GET_SIZE(HDRP(bp))) || GET_TAG(HDRP(bp)))) {
-				bp = SUCC(bp); 
+				bp = SUCC(bp);
 			}
 			if (bp != NULL) {
 				return place(bp, asize);
 			}
-    	}
-    }
- 
-    /* No fit found. Get more memory and place the block */
-    extendsize = MAX(asize, CHUNKSIZE);                 //line:vm:mm:growheap1
-    if ((bp = extend_heap(extendsize)) == NULL)  
+		}
+	}
+
+	/* No fit found. Get more memory and place the block */
+	extendsize = MAX(asize, CHUNKSIZE);                 //line:vm:mm:growheap1
+	if ((bp = extend_heap(extendsize)) == NULL)
 		return NULL;                                  //line:vm:mm:growheap2
 
 	return place(bp, asize);                                 //line:vm:mm:growheap3
@@ -169,22 +169,22 @@ void *mm_malloc(size_t size)
 /*
  * mm_free - Freeing a block does nothing.
  */
-void mm_free(void *ptr)
+void mm_free(void* ptr)
 {
 	/* $end mmfree */
-    if(ptr == 0) 
+	if (ptr == 0)
 		return;
 
-/* $begin mmfree */
-    size_t size = GET_SIZE(HDRP(ptr));
-/* $end mmfree */
+	/* $begin mmfree */
+	size_t size = GET_SIZE(HDRP(ptr));
+	/* $end mmfree */
 
 	REMOVE_TAG(HDRP(NEXT_BLKP(ptr)));
-    PUT_TAG(HDRP(ptr), PACK(size, 0));
-    PUT_TAG(FTRP(ptr), PACK(size, 0));
+	PUT_TAG(HDRP(ptr), PACK(size, 0));
+	PUT_TAG(FTRP(ptr), PACK(size, 0));
 
 	add_seglist(ptr, size);
-    coalesce(ptr);
+	coalesce(ptr);
 
 	//if (mm_check() == -1)
 	//	exit(0);
@@ -193,33 +193,33 @@ void mm_free(void *ptr)
 /*
  * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
  */
-void *mm_realloc(void *ptr, size_t size)
+void* mm_realloc(void* ptr, size_t size)
 {
 	size_t new_size;
-    void *new_ptr;
+	void* new_ptr;
 	int remainder;
 	int extend_size;
 	int block_size;
 
-    /* If size == 0 then this is just free, and we return NULL. */
-    if(size == 0) {
+	/* If size == 0 then this is just free, and we return NULL. */
+	if (size == 0) {
 		mm_free(ptr);
 		return 0;
-    }
+	}
 
-    /* If oldptr is NULL, then this is just malloc. */
-    if(ptr == NULL) {
+	/* If oldptr is NULL, then this is just malloc. */
+	if (ptr == NULL) {
 		return mm_malloc(size);
-    }
-	
+	}
+
 	new_ptr = ptr;
 	new_size = size;
 
-    if (new_size <= DSIZE) {
+	if (new_size <= DSIZE) {
 		new_size = 2 * DSIZE;
 	}
 	else {
-		new_size = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE); 	
+		new_size = DSIZE * ((size + (DSIZE)+(DSIZE - 1)) / DSIZE);
 	}
 
 	new_size += REALLOC_BUFFER;
@@ -249,19 +249,19 @@ void *mm_realloc(void *ptr, size_t size)
 	if (block_size < 2 * REALLOC_BUFFER)
 		SET_TAG(HDRP(NEXT_BLKP(new_ptr)));
 
-    return new_ptr;
+	return new_ptr;
 }
 
 int mm_check()
 {
-	void **seg_lists[TOTAL_LIST] = {
-        &seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
-        &seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
-    	&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
-        &seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
+	void** seg_lists[TOTAL_LIST] = {
+		&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
+		&seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
+		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
+		&seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
 	};
-	
-	void *head;
+
+	void* head;
 
 	for (int i = 0; i < TOTAL_LIST; i++) {
 		if (*seg_lists[i] == NULL)
@@ -299,22 +299,22 @@ int mm_check()
 // seg_list_2 : [2^4 + 1, 2^5]
 // ...
 // seg_list_16 : [2^18 + 1, INF]
-static void add_seglist(char *bp, size_t size)
+static void add_seglist(char* bp, size_t size)
 {
-	void **seg_lists[TOTAL_LIST] = {
-    	&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
+	void** seg_lists[TOTAL_LIST] = {
+		&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
 		&seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
-		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12, 
+		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
 		&seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
 	};
 
-	void *head = NULL;
-	void *before = NULL;
+	void* head = NULL;
+	void* before = NULL;
 	int i = 0;
 
 	for (i = 0; i < TOTAL_LIST; i++) {
 		if (size <= (1 << (i + 4)) || i == (TOTAL_LIST - 1)) {
-			break;	
+			break;
 		}
 	}
 
@@ -337,7 +337,7 @@ static void add_seglist(char *bp, size_t size)
 			SET_PTR(PRED_PTR(head), bp);
 			*seg_lists[i] = bp;
 		}
-	}	
+	}
 	else {
 		if (before) { /* Last block */
 			SET_PTR(PRED_PTR(bp), before);
@@ -352,23 +352,23 @@ static void add_seglist(char *bp, size_t size)
 	}
 }
 
-static void remove_seglist(char *bp)
+static void remove_seglist(char* bp)
 {
-	void **seg_lists[TOTAL_LIST] = {
-    	&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
-        &seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
-        &seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
-        &seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
+	void** seg_lists[TOTAL_LIST] = {
+		&seg_list_1, &seg_list_2, &seg_list_3, &seg_list_4,
+		&seg_list_5, &seg_list_6, &seg_list_7, &seg_list_8,
+		&seg_list_9, &seg_list_10, &seg_list_11, &seg_list_12,
+		&seg_list_13, &seg_list_14, &seg_list_15, &seg_list_16,
 	};
-	
+
 	int i = 0;
 	size_t size = GET_SIZE(HDRP(bp));
 
 	for (i = 0; i < TOTAL_LIST; i++) {
-        if (size <= (1 << (i + 4)) || i == (TOTAL_LIST - 1)) {
-        	break;
-    	}
-    }
+		if (size <= (1 << (i + 4)) || i == (TOTAL_LIST - 1)) {
+			break;
+		}
+	}
 
 	if (SUCC(bp)) {
 		if (PRED(bp)) { /* Mid block */
@@ -380,7 +380,7 @@ static void remove_seglist(char *bp)
 			*seg_lists[i] = SUCC(bp);
 		}
 	}
-	else { 
+	else {
 		if (PRED(bp)) { /* Last block */
 			SET_PTR(SUCC_PTR(PRED(bp)), NULL);
 		}
@@ -390,17 +390,17 @@ static void remove_seglist(char *bp)
 	}
 }
 
-static void *coalesce(void *bp)
+static void* coalesce(void* bp)
 {
 	size_t prev_alloc = GET_ALLOC(HDRP(PREV_BLKP(bp))) || GET_TAG(HDRP(PREV_BLKP(bp)));
-    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
-    size_t size = GET_SIZE(HDRP(bp));
+	size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+	size_t size = GET_SIZE(HDRP(bp));
 
 	if (prev_alloc && next_alloc) {            /* Case 1 */
 		return bp;
 	}
-    else if (prev_alloc && !next_alloc) {      /* Case 2 */ 
-    	remove_seglist(bp);
+	else if (prev_alloc && !next_alloc) {      /* Case 2 */
+		remove_seglist(bp);
 		remove_seglist(NEXT_BLKP(bp));
 
 		size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
@@ -409,8 +409,8 @@ static void *coalesce(void *bp)
 
 		add_seglist(bp, size);
 	}
-    else if (!prev_alloc && next_alloc) {      /* Case 3 */
-    	remove_seglist(PREV_BLKP(bp));
+	else if (!prev_alloc && next_alloc) {      /* Case 3 */
+		remove_seglist(PREV_BLKP(bp));
 		remove_seglist(bp);
 
 		size += GET_SIZE(HDRP(PREV_BLKP(bp)));
@@ -420,8 +420,8 @@ static void *coalesce(void *bp)
 
 		add_seglist(bp, size);
 	}
-    else {                                     /* Case 4 */
-    	remove_seglist(PREV_BLKP(bp));
+	else {                                     /* Case 4 */
+		remove_seglist(PREV_BLKP(bp));
 		remove_seglist(bp);
 		remove_seglist(NEXT_BLKP(bp));
 
@@ -429,20 +429,20 @@ static void *coalesce(void *bp)
 		PUT_TAG(HDRP(PREV_BLKP(bp)), PACK(size, 0));
 		PUT_TAG(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
 		bp = PREV_BLKP(bp);
-	
+
 		add_seglist(bp, size);
 	}
 
 	return bp;
 }
 
-static void *extend_heap(size_t words)
+static void* extend_heap(size_t words)
 {
-	void *bp;
+	void* bp;
 	size_t asize;
 
 	asize = (size_t)(words + DSIZE - 1) & ~0x7;
-	if ((bp = mem_sbrk(asize)) == (void *)-1)
+	if ((bp = mem_sbrk(asize)) == (void*)-1)
 		return NULL;
 
 	PUT(HDRP(bp), PACK(asize, 0));
@@ -453,27 +453,27 @@ static void *extend_heap(size_t words)
 	return coalesce(bp);
 }
 
-static void *place(void *bp, size_t asize)
+static void* place(void* bp, size_t asize)
 {
-    size_t csize = GET_SIZE(HDRP(bp));
+	size_t csize = GET_SIZE(HDRP(bp));
 
 	remove_seglist(bp);
 
-    if ((csize - asize) >= (2 * DSIZE)) { /* block division */
-		if (asize < 100) 
+	if ((csize - asize) >= (2 * DSIZE)) { /* block division */
+		if (asize < 100)
 		{
 			PUT_TAG(HDRP(bp), PACK(asize, 1));
 			PUT_TAG(FTRP(bp), PACK(asize, 1));
 
 			PUT(HDRP(NEXT_BLKP(bp)), PACK(csize - asize, 0));
 			PUT(FTRP(NEXT_BLKP(bp)), PACK(csize - asize, 0));
-    		add_seglist(NEXT_BLKP(bp), csize - asize);
-	
+			add_seglist(NEXT_BLKP(bp), csize - asize);
+
 			//if (mm_check() == -1)
 			//	exit(0);
 			return bp;
 		}
-		else 
+		else
 		{
 			PUT_TAG(HDRP(bp), PACK(csize - asize, 0));
 			PUT_TAG(FTRP(bp), PACK(csize - asize, 0));
@@ -481,19 +481,18 @@ static void *place(void *bp, size_t asize)
 			PUT(HDRP(NEXT_BLKP(bp)), PACK(asize, 1));
 			PUT(FTRP(NEXT_BLKP(bp)), PACK(asize, 1));
 			add_seglist(bp, csize - asize);
-			
+
 			//if (mm_check() == -1)
 			//	exit(0);
 			return NEXT_BLKP(bp);
 		}
 	}
-    else { /* block division x */
+	else { /* block division x */
 		PUT_TAG(HDRP(bp), PACK(csize, 1));
 		PUT_TAG(FTRP(bp), PACK(csize, 1));
-		
+
 		//if (mm_check() == -1)
 		//	exit(0);
 		return bp;
 	}
 }
-
