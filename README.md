@@ -19,3 +19,9 @@
 3. 성능 평가 및 분석
 ------------
 
+### HW3: Dynamic Memory Allocatr
+
++ Implemented as segregated list
++ Result : util(56) + throughput(40) = 96
++ Improve util from 47 to 56 by using realloc buffer
+  + Before Result : util(47) + throughtput(40) = 87
