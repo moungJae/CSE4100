@@ -19,7 +19,7 @@
 3. 성능 평가 및 분석
 ------------
 
-### HW3: Dynamic Memory Allocatr
+### HW3: Dynamic Memory Allocator
 
 + Implemented as segregated list
 + Result : util(56) + throughput(40) = 96
